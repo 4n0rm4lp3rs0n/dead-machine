@@ -1,0 +1,15 @@
+Idea -> model -> file .pklm -> storage -> streamlit -> web app
+model: 
+dataset -> preprocessing -> train 80% -> performance -> choose model
+
+models:
+
+Logistic Regression
+KNN
+Decision Tree
+Gaussian NB
+SVC
+GradientBoostingClassifier
+Random Forest
+CatBoostClassifier
+XGBClassifier
