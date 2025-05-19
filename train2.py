@@ -15,6 +15,38 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 from xgboost import XGBClassifier
+import streamlit as st
+import streamlit.components.v1 as components
+
+#Web part
+
+st.markdown("""
+    <h1 style='color:#f63366;'>🔥 Dead Machine</h1>
+    <p>Welcome to the Machine Learning app!</p>
+    <hr>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+    <style>
+        body {
+            background-color: #f0f2f6;
+        }
+        .big-font {
+            font-size:30px;
+            color: #262730;
+        }
+    </style>
+    <p class='big-font'>This is styled text.</p>
+""", unsafe_allow_html=True)
+
+components.html("""
+    <div style="background-color:#f63366;padding:20px;border-radius:10px;">
+        <h2 style="color:white;">⚙️ Dead Machine Interface</h2>
+        <p style="color:white;">Machine Learning made accessible.</p>
+    </div>
+""", height=150)
+
+#Learning part
 
 # Load dataset
 df = pd.read_csv('./predictive_maintenance.csv')
