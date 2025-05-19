@@ -17,7 +17,7 @@ from catboost import CatBoostClassifier
 from xgboost import XGBClassifier
 
 # Load dataset
-df = pd.read_csv('./ai4i2020.csv')
+df = pd.read_csv('./predictive_maintenance.csv')
 
 # Basic data exploration
 print("DataFrame Info:")
