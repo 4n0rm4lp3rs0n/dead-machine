@@ -12,9 +12,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from catboost import CatBoostClassifier
+from xgboost import XGBClassifier
 
 # Load dataset
-df = pd.read_csv('./ai4i2020.csv')
+df = pd.read_csv('./MDT32_final_project_dataset.csv')
 
 # Basic data exploration
 print("DataFrame Info:")
@@ -36,10 +39,11 @@ le = LabelEncoder()
 df['Type'] = le.fit_transform(df['Type'])
 print("\nEncoded Type Value Counts:")
 print(df['Type'].value_counts())
+# df['Failure Type'] = le.fit_transform(df['Failure Type'])
 
 # Drop unnecessary columns
-df = df.drop(['Product ID', 'UDI', 'TWF', 'HDF', 'PWF', 'OSF', 'RNF'], axis=1)
-# df = df.drop(['Product ID', 'UDI'], axis=1)
+# df = df.drop(['Product ID', 'UDI', 'TWF', 'HDF', 'PWF', 'OSF', 'RNF'], axis=1)
+df = df.drop(['Product ID', 'UDI', 'Failure Type'], axis=1)
 
 # Correlation heatmap
 correlation_matrix = df.corr()
@@ -94,7 +98,8 @@ print("\nOversampled Target Value Counts:")
 print(pd.DataFrame(y1.value_counts()))
 
 # Split data into train and test sets
-x_train, x_test, y_train, y_test = train_test_split(X1, y1, test_size=0.2, random_state=42)
+X1.columns = [col.replace('[', '').replace(']', '').replace('<', '').replace('>', '').strip() for col in X1.columns]
+x_train, x_test, y_train, y_test = train_test_split(X1, y1, test_size=0.4, random_state=42)
 
 # Model class for training and evaluation
 class Model:
@@ -133,11 +138,19 @@ class Model:
 
         self.confusion_matrix(pred)
 
-    def confusion_matrix(self, pred):       #add actual + predicted 
+    # def confusion_matrix(self, pred):       #add actual + predicted
+    #     cm = confusion_matrix(y_test, pred)
+    #     plt.figure(figsize=(6, 4))
+    #     sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu")
+    #     plt.title(f'Confusion Matrix - {self.model_name}')
+    #     plt.show()
+    def confusion_matrix(self, pred):
         cm = confusion_matrix(y_test, pred)
         plt.figure(figsize=(6, 4))
         sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu")
         plt.title(f'Confusion Matrix - {self.model_name}')
+        plt.xlabel('Actual')  # Gán nhãn trục X
+        plt.ylabel('Predicted')     # Gán nhãn trục Y
         plt.show()
 
     def plot_roc_curve(self, fpr, tpr):
@@ -157,14 +170,17 @@ models = [
     (DecisionTreeClassifier(random_state=20), 'Decision Tree'),
     (GaussianNB(), 'Gaussian NB'),
     (SVC(random_state=20), 'SVC'),
-    (GradientBoostingClassifier(random_state=20), 'GradientBoostingClassifier')
+    (GradientBoostingClassifier(random_state=20), 'GradientBoostingClassifier'),
+    (RandomForestClassifier(random_state=20), 'Random Forest'),
+    (CatBoostClassifier(random_state=20, verbose=0), 'CatBoostClassifier'),
+    (XGBClassifier(random_state=20, use_label_encoder=False, eval_metric='logloss'), 'XGBoostClassifier')
 ]
 #moar models
 
 for model, name in models:
     model_instance = Model(model, name)
     model_instance.predict()
-    
+
 
 # Display performance summary
 performance = pd.DataFrame(Model.scores)
