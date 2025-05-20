@@ -137,11 +137,7 @@ class Model:
         print(f'Mean Squared Error: {mean_squared_error(y_test, pred)}')
 
         self.confusion_matrix(pred)
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> 6b61f6c573045040611da7c46d27cf2e302606f5
+    
     def confusion_matrix(self, pred):
         cm = confusion_matrix(y_test, pred)
         plt.figure(figsize=(6, 4))
