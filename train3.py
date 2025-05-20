@@ -137,13 +137,7 @@ class Model:
         print(f'Mean Squared Error: {mean_squared_error(y_test, pred)}')
 
         self.confusion_matrix(pred)
-
-    # def confusion_matrix(self, pred):       #add actual + predicted
-    #     cm = confusion_matrix(y_test, pred)
-    #     plt.figure(figsize=(6, 4))
-    #     sns.heatmap(cm, annot=True, fmt='d', cmap="YlGnBu")
-    #     plt.title(f'Confusion Matrix - {self.model_name}')
-    #     plt.show()
+        
     def confusion_matrix(self, pred):
         cm = confusion_matrix(y_test, pred)
         plt.figure(figsize=(6, 4))
