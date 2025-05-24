@@ -14,8 +14,6 @@ FEATURE_COLUMNS = [
     'Rotational speed [rpm]',
     'Torque [Nm]',
     'Tool wear [min]',
-    'Type_H',
-    'Type_L',
 ]
 
 st.title("📊 Machine Failure Prediction (Batch Upload)")
