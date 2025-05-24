@@ -1,25 +1,13 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
-
-# Load model and scaler
-model = joblib.load('rf_combined_model.pkl')
-scaler = joblib.load('scaler.pkl')
-
-# Define expected columns
-FEATURE_COLUMNS = [
+REQUIRED_COLUMNS = [
     'Air temperature [K]',
     'Process temperature [K]',
     'Rotational speed [rpm]',
     'Torque [Nm]',
     'Tool wear [min]',
+    'Type'
 ]
 
-st.title("📊 Machine Failure Prediction (Batch Upload)")
-
-# File uploader
-uploaded_file = st.file_uploader("Upload your machine data (CSV)", type=['csv'])
+DUMMY_COLUMNS = ['Type_H', 'Type_L']  # The columns used in training
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
@@ -27,28 +15,45 @@ if uploaded_file:
     st.subheader("🔍 Preview of Uploaded Data")
     st.dataframe(df.head())
 
-    # Check if required columns exist
-    missing_cols = [col for col in FEATURE_COLUMNS if col not in df.columns]
+    missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
     if missing_cols:
         st.error(f"❌ Missing required columns: {missing_cols}")
     else:
-        # Scale the input
-        X_scaled = scaler.transform(df[FEATURE_COLUMNS])
-        
-        # Predict
+        # One-hot encode 'Type' like during training (drop_first=True → no Type_M)
+        df_encoded = pd.get_dummies(df, columns=['Type'], drop_first=True)
+
+        # Ensure all dummy columns exist
+        for col in DUMMY_COLUMNS:
+            if col not in df_encoded.columns:
+                df_encoded[col] = 0
+
+        # Final feature list for prediction
+        final_features = [
+            'Air temperature [K]',
+            'Process temperature [K]',
+            'Rotational speed [rpm]',
+            'Torque [Nm]',
+            'Tool wear [min]',
+            'Type_H',
+            'Type_L'
+        ]
+
+        # Reorder columns to match training
+        df_encoded = df_encoded[final_features]
+
+        # Scale and predict
+        X_scaled = scaler.transform(df_encoded)
         predictions = model.predict(X_scaled)
         probabilities = model.predict_proba(X_scaled)
 
-        # Append predictions to dataframe
+        # Append predictions
         df['Predicted Class'] = predictions
-
-        # Add prediction probabilities (optional)
         for i, class_label in enumerate(model.classes_):
             df[f'Prob_{class_label}'] = probabilities[:, i]
 
         st.subheader("✅ Prediction Results")
         st.dataframe(df)
 
-        # Optionally download result
+        # Allow CSV download
         csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Predictions as CSV", csv, "predictions.csv", "text/csv")
+        st.download_button("📥 Download Predictions", csv, "predictions.csv", "text/csv")
