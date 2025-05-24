@@ -27,7 +27,17 @@ reverse_failure_map = {v: k for k, v in enumerate(le_failure.classes_)}
 X = df.drop(columns=['Machine failure', 'Failure Type'])
 y = df[['Machine failure', 'Failure Type']]
 
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+oversample = RandomOverSampler(sampling_strategy='minority', random_state=1)
+X1, y1 = oversample.fit_resample(X, y)
+
+# Verify oversampling
+print("\nOversampled Target Value Counts:")
+print(pd.DataFrame(y1.value_counts()))
+
+# Split data into train and test sets
+X1.columns = [col.replace('[', '').replace(']', '').replace('<', '').replace('>', '').strip() for col in X1.columns]
+
+x_train, x_test, y_train, y_test = train_test_split(X1, y, test_size=0.3, random_state=42)
 
 multi_clf = MultiOutputClassifier(RandomForestClassifier(random_state=42))
 multi_clf.fit(x_train, y_train)
