@@ -1,49 +1,56 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 import joblib
-import pandas as pd
 
-# Load the saved model and scaler
+# Load model and scaler
 model = joblib.load('rf_combined_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
-# Define the expected feature names (MUST match training order)
-feature_names = [
-    'Air temperature [K]', 'Process temperature [K]',
-    'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]',
-    'Type_H', 'Type_L',  # if you used drop_first=True on one-hot encoding
+# Define expected columns
+FEATURE_COLUMNS = [
+    'Air temperature [K]',
+    'Process temperature [K]',
+    'Rotational speed [rpm]',
+    'Torque [Nm]',
+    'Tool wear [min]',
+    'Type_H',
+    'Type_L',
 ]
 
-st.title("Machine Failure Prediction")
+st.title("📊 Machine Failure Prediction (Batch Upload)")
 
-# Create input fields for each feature
-def get_user_input():
-    air_temp = st.number_input("Air Temperature (K)", value=300.0)
-    process_temp = st.number_input("Process Temperature (K)", value=310.0)
-    rpm = st.number_input("Rotational Speed (rpm)", value=1500.0)
-    torque = st.number_input("Torque (Nm)", value=40.0)
-    tool_wear = st.number_input("Tool Wear (min)", value=10.0)
-    
-    machine_type = st.selectbox("Machine Type", ['M'])  # Adjust based on encoded dummies
-    type_H = 1 if machine_type == 'H' else 0
-    type_L = 1 if machine_type == 'L' else 0
+# File uploader
+uploaded_file = st.file_uploader("Upload your machine data (CSV)", type=['csv'])
 
-    data = np.array([[air_temp, process_temp, rpm, torque, tool_wear, type_H, type_L]])
-    return data
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
 
-input_data = get_user_input()
+    st.subheader("🔍 Preview of Uploaded Data")
+    st.dataframe(df.head())
 
-# Scale the input
-scaled_input = scaler.transform(input_data)
+    # Check if required columns exist
+    missing_cols = [col for col in FEATURE_COLUMNS if col not in df.columns]
+    if missing_cols:
+        st.error(f"❌ Missing required columns: {missing_cols}")
+    else:
+        # Scale the input
+        X_scaled = scaler.transform(df[FEATURE_COLUMNS])
+        
+        # Predict
+        predictions = model.predict(X_scaled)
+        probabilities = model.predict_proba(X_scaled)
 
-# Predict
-if st.button("Predict"):
-    prediction = model.predict(scaled_input)[0]
-    probabilities = model.predict_proba(scaled_input)
-    st.write(f"### Predicted: `{prediction}`")
-    
-    # Show class probabilities
-    prob_df = pd.DataFrame(probabilities, columns=model.classes_)
-    st.write("#### Class Probabilities:")
-    st.dataframe(prob_df.T)
+        # Append predictions to dataframe
+        df['Predicted Class'] = predictions
 
+        # Add prediction probabilities (optional)
+        for i, class_label in enumerate(model.classes_):
+            df[f'Prob_{class_label}'] = probabilities[:, i]
+
+        st.subheader("✅ Prediction Results")
+        st.dataframe(df)
+
+        # Optionally download result
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download Predictions as CSV", csv, "predictions.csv", "text/csv")
