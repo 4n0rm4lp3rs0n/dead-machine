@@ -1,8 +1,9 @@
 import streamlit as st
-import numpy as np
-import joblib
 import pandas as pd
+import joblib
+from sklearn.preprocessing import StandardScaler
 
+<<<<<<< HEAD
 # Load the saved model and scaler
 model = joblib.load('rf_combined_model.pkl')
 scaler = joblib.load('scaler.pkl')
@@ -14,36 +15,68 @@ feature_names = [
     'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]',
     'Type'
 ]
+=======
+# Load model and scaler
+model = joblib.load("rf_combined_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
-st.title("Machine Failure Prediction")
+st.title("🛠️ Machine Failure Predictor")
+>>>>>>> f05202ce2900b5356256ade759424297cab8a67b
 
-# Create input fields for each feature
-def get_user_input():
-    air_temp = st.number_input("Air Temperature (K)", value=300.0)
-    process_temp = st.number_input("Process Temperature (K)", value=310.0)
-    rpm = st.number_input("Rotational Speed (rpm)", value=1500.0)
-    torque = st.number_input("Torque (Nm)", value=40.0)
-    tool_wear = st.number_input("Tool Wear (min)", value=10.0)
+# Upload CSV file
+uploaded_file = st.file_uploader("Upload a CSV file with machine data", type=["csv"])
+
+if uploaded_file is not None:
+    # Read uploaded data
+    df = pd.read_csv(uploaded_file)
+    st.subheader("🔍 Uploaded Data Preview")
+    st.dataframe(df)
+
+    # One-hot encode the Type column
+    if 'Type' in df.columns:
+        df = pd.get_dummies(df, columns=['Type'], drop_first=True)
+    else:
+        st.error("Missing 'Type' column in the uploaded file.")
+        st.stop()
+
+    # Ensure Type_H and Type_L columns exist
+    for col in ['Type_H', 'Type_L']:
+        if col not in df.columns:
+            df[col] = 0  # Add missing column with 0s
+
+    # Ensure consistent column order
+    feature_columns = ['Air temperature [K]', 'Process temperature [K]',
+                       'Rotational speed [rpm]', 'Torque [Nm]',
+                       'Tool wear [min]', 'Type_H', 'Type_L']
     
+<<<<<<< HEAD
     machine_type = st.selectbox("Machine Type", le.classes_)
     encoded_type = le.transform([machine_type])[0]
 
     data = np.array([[air_temp, process_temp, rpm, torque, tool_wear, encoded_type]])
     return data
+=======
+    # Check if all required features are in the uploaded data
+    missing_cols = [col for col in feature_columns if col not in df.columns]
+    if missing_cols:
+        st.error(f"Missing required columns: {missing_cols}")
+        st.stop()
 
-input_data = get_user_input()
+    # Select features and scale them
+    X = df[feature_columns]
+    X_scaled = scaler.transform(X)
+>>>>>>> f05202ce2900b5356256ade759424297cab8a67b
 
-# Scale the input
-scaled_input = scaler.transform(input_data)
+    # Predict
+    predictions = model.predict(X_scaled)
 
-# Predict
-if st.button("Predict"):
-    prediction = model.predict(scaled_input)[0]
-    probabilities = model.predict_proba(scaled_input)
-    st.write(f"### Predicted: `{prediction}`")
-    
-    # Show class probabilities
-    prob_df = pd.DataFrame(probabilities, columns=model.classes_)
-    st.write("#### Class Probabilities:")
-    st.dataframe(prob_df.T)
+    # Show predictions
+    df['Prediction'] = predictions
+    st.subheader("📊 Predictions")
+    st.dataframe(df)
 
+    # Optionally allow download
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button("⬇️ Download predictions as CSV", data=csv, file_name='predictions.csv', mime='text/csv')
+else:
+    st.info("Please upload a CSV file to start.")
