@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE
 import joblib
@@ -16,14 +16,13 @@ data['Combined Target'] = data.apply(
     lambda row: 'No Failure' if row['Machine failure'] == 0 else row['Failure Type'], axis=1
 )
 
-print(data)
-
 # Tiền xử lý dữ liệu
+
+le = LabelEncoder()
+data['Type'] = le.fit_transform(data['Type'])
+
 # Loại bỏ các cột không cần thiết
 data = data.drop(['UDI', 'Product ID', 'Machine failure', 'Failure Type'], axis=1)
-
-# Mã hóa cột 'Type' thành one-hot encoding
-data = pd.get_dummies(data, columns=['Type'], drop_first=True)
 
 # Kiểm tra giá trị thiếu
 if data.isnull().sum().sum() > 0:
@@ -101,4 +100,5 @@ print(tabulate(report_table, headers=['Class', 'Precision', 'Recall', 'F1-Score'
 # Lưu mô hình và scaler
 joblib.dump(rf_model, 'rf_combined_model.pkl')
 joblib.dump(scaler, 'scaler.pkl')
-print("\nMô hình và scaler đã được lưu vào 'rf_combined_model.pkl' và 'scaler.pkl'.")
+joblib.dump(le, 'labels.pkl')
+print("\nFinished")

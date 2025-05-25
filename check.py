@@ -5,25 +5,21 @@ from tabulate import tabulate
 # Tải mô hình và scaler
 rf_model = joblib.load('rf_combined_model.pkl')
 scaler = joblib.load('scaler.pkl')
+le = joblib.load('labels.pkl')
 
 # Hàm dự đoán
 def predict_maintenance(air_temp, process_temp, rpm, torque, tool_wear, type_product):
+    t_e = le.transform([type_product])[0]
+    
     # Tạo DataFrame cho dữ liệu mới
     input_data = pd.DataFrame({
         'Air temperature [K]': [air_temp],
         'Process temperature [K]': [process_temp],
         'Rotational speed [rpm]': [rpm],
         'Torque [Nm]': [torque],
-        'Tool wear [min]': [tool_wear]
+        'Tool wear [min]': [tool_wear],
+        'Type': [t_e]
     })
-    
-    # Mã hóa cột 'Type'
-    type_columns = ['Type_L', 'Type_M']
-    input_data[type_columns] = 0
-    if type_product == 'L':
-        input_data['Type_L'] = 1
-    elif type_product == 'M':
-        input_data['Type_M'] = 1
     
     # Chuẩn hóa dữ liệu mới
     input_scaled = scaler.transform(input_data)

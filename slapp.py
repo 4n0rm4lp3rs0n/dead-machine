@@ -6,12 +6,13 @@ import pandas as pd
 # Load the saved model and scaler
 model = joblib.load('rf_combined_model.pkl')
 scaler = joblib.load('scaler.pkl')
+le = joblib.load('labels.pkl')
 
 # Define the expected feature names (MUST match training order)
 feature_names = [
     'Air temperature [K]', 'Process temperature [K]',
     'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]',
-    'Type_H', 'Type_L',  # if you used drop_first=True on one-hot encoding
+    'Type'
 ]
 
 st.title("Machine Failure Prediction")
@@ -24,11 +25,10 @@ def get_user_input():
     torque = st.number_input("Torque (Nm)", value=40.0)
     tool_wear = st.number_input("Tool Wear (min)", value=10.0)
     
-    machine_type = st.selectbox("Machine Type", ['M'])  # Adjust based on encoded dummies
-    type_H = 1 if machine_type == 'H' else 0
-    type_L = 1 if machine_type == 'L' else 0
+    machine_type = st.selectbox("Machine Type", le.classes_)
+    encoded_type = le.transform([machine_type])[0]
 
-    data = np.array([[air_temp, process_temp, rpm, torque, tool_wear, type_H, type_L]])
+    data = np.array([[air_temp, process_temp, rpm, torque, tool_wear, encoded_type]])
     return data
 
 input_data = get_user_input()
