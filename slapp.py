@@ -3,7 +3,6 @@ import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler
 
-<<<<<<< HEAD
 # Load the saved model and scaler
 model = joblib.load('rf_combined_model.pkl')
 scaler = joblib.load('scaler.pkl')
@@ -15,13 +14,6 @@ feature_names = [
     'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]',
     'Type'
 ]
-=======
-# Load model and scaler
-model = joblib.load("rf_combined_model.pkl")
-scaler = joblib.load("scaler.pkl")
-
-st.title("🛠️ Machine Failure Predictor")
->>>>>>> f05202ce2900b5356256ade759424297cab8a67b
 
 # Upload CSV file
 uploaded_file = st.file_uploader("Upload a CSV file with machine data", type=["csv"])
