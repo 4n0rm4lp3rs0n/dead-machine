@@ -39,8 +39,15 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Chuẩn hóa dữ liệu
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# X_train_scaled = scaler.fit_transform(X_train)
+# X_test_scaled = scaler.transform(X_test)
+
+# scaler.transform fucks the pd.DataFrame to Numpy array, which fucks the web
+
+X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns)
+X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X_test.columns)
+
+# print (type(X_test_scaled))
 
 # Xử lý mất cân bằng lớp bằng SMOTE
 smote = SMOTE(random_state=42, k_neighbors=3)
