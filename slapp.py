@@ -11,9 +11,6 @@ le = joblib.load('labels.pkl')
 
 st.title("🛠️ Machine Failure Prediction")
 
-print("Scaler feature names:", scaler.feature_names_in_)
-print("Model feature names:", model.feature_names_in_)
-
 uploaded_file = st.file_uploader("📂 Upload a CSV file with machine data", type=["csv"])
 
 if uploaded_file is not None:
@@ -50,6 +47,7 @@ if uploaded_file is not None:
 
     # Select features in correct order
     X = df[required_cols]
+    X.columns = [None] * X.shape[1]
 
     # Scale and predict
     X_scaled = scaler.transform(X)
