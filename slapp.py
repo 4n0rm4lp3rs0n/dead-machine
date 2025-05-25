@@ -17,7 +17,7 @@ if uploaded_file is not None:
     st.dataframe(df)
 
     # Check required columns
-    required_cols = ["Type" ,'Air temperature [K]', 'Process temperature [K]',
+    required_cols = ['Type' ,'Air temperature [K]', 'Process temperature [K]',
                      'Rotational speed [rpm]', 'Torque [Nm]', 'Tool wear [min]']
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
