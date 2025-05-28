@@ -66,6 +66,11 @@ if uploaded_file is not None:
         st.error(f"Error during prediction: {e}")
         st.stop()
 
+    try:
+        df['Type'] = le.inverse_transform(df['Type'])
+    except Exception:
+        pass
+
     # Get failure types
     failure_types = []
     if 'Failure Type' in df.columns:
