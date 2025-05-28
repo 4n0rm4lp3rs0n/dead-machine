@@ -4,6 +4,7 @@ import pandas as pd
 import joblib
 import heapq
 import numpy as np
+import ht
 
 # Load model, scaler, and encoder
 model = joblib.load('rf_combined_model.pkl')
@@ -141,7 +142,32 @@ if uploaded_file is not None:
         _, _, idx, _, _ = heapq.heappop(heap)
         sorted_indices.append(idx)
 
+    if not sorted_indices:
+        st.error("❌ Heap sorting failed — no records prioritized.")
+        st.stop()
+
+    # 🔧 Build a hashtable from sorted_df using UDI or Product ID as key
     sorted_df = df.iloc[sorted_indices].reset_index(drop=True)
+    hashtable = ht.HashTable()
+    key_column = None
+
+    if 'UDI' in sorted_df.columns:
+        key_column = 'UDI'
+    elif 'Product ID' in sorted_df.columns:
+        key_column = 'Product ID'
+
+    seen_keys = set()
+
+    if key_column:
+       for _, row in sorted_df.iterrows():
+            for col in ['UDI', 'Product ID']:
+                if col in row:
+                    key = str(row[col]).strip().upper()
+                    if key not in seen_keys:
+                        hashtable.insert(key, row.to_dict())
+                        seen_keys.add(key)
+    else:
+        st.warning("No 'UDI' or 'Product ID' column found to build hashtable.")
 
     # Add probability columns for display
     prob_cols = [f'Prob_{cls}' for cls in model.classes_]
@@ -176,37 +202,23 @@ if uploaded_file is not None:
 
     # Filter DataFrame based on search term
     if search_term:
-        if not search_cols:
+        if key_column is None:
             st.error("No 'UDI' or 'Product ID' column found in the data.")
         else:
-            # Convert search_term to appropriate type (int for UDI, str for Product ID)
-            try:
-                search_term_int = int(search_term) if search_term.isdigit() else None
-                search_values = [search_term]
-                if search_term_int is not None:
-                    search_values.append(search_term_int)
-            except ValueError:
-                search_values = [search_term]
+            search_key = str(search_term).strip().upper()
+            result = hashtable.get(search_key)
+            if result:
+                st.subheader(f"📊 Search Result for '{search_key}' (From Hashtable)")
+                st.dataframe(pd.DataFrame([result]))
 
-            # Use index-based filtering with isin for efficiency
-            filtered_df = search_df[search_df.index.isin(search_values, level=0)]
-            
-            if filtered_df.empty:
-                st.warning(f"No results found for '{search_term}' in {search_cols}.")
-            else:
-                # Reset index for display
-                filtered_df = filtered_df.reset_index(drop=True)
-                st.subheader(f"📊 Search Results for '{search_term}' (Sorted by Priority)")
-                st.write(f"Filtered samples are sorted by your priority order: {priority_order}, with max failure probability as tie-breaker.")
-                st.dataframe(filtered_df)
-
-                # Download filtered predictions
-                csv = filtered_df.to_csv(index=False).encode('utf-8')
+                csv = pd.DataFrame([result]).to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label=f"⬇️ Download search results as CSV",
+                    label=f"⬇️ Download search result as CSV",
                     data=csv,
-                    file_name=f'search_results_{search_term}.csv',
+                    file_name=f'search_result_{search_key}.csv',
                     mime='text/csv'
                 )
+            else:
+                st.warning(f"No result found for '{search_term}' in column {key_column}.")
 else:
     st.info("Please upload a CSV file to start.")
